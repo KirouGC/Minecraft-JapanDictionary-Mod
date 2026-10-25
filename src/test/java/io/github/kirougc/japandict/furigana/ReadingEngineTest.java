@@ -52,6 +52,13 @@ class ReadingEngineTest {
 	}
 
 	@Test
+	void contentWordsUseDictionaryForm() {
+		List<String> words = ENGINE.words("ダイヤモンドの剣を食べた！").stream()
+				.map(ReadingEngine.Word::lookupForm).toList();
+		assertEquals(List.of("ダイヤモンド", "剣", "食べる"), words);
+	}
+
+	@Test
 	void kanaOnlyHasNoFurigana() {
 		assertTrue(ENGINE.furigana("インベントリ").isEmpty());
 		assertTrue(ENGINE.furigana("Minecraft Realms").isEmpty());

@@ -3,5 +3,6 @@
 	"key.japandict.cycle_furigana": "Furigana: arriba / abajo / oculto",
 	"message.japandict.furigana.above": "Furigana: arriba",
 	"message.japandict.furigana.below": "Furigana: abajo",
-	"message.japandict.furigana.hidden": "Furigana: oculto"
+	"message.japandict.furigana.hidden": "Furigana: oculto",
+	"key.japandict.dictionary": "Modo Diccionario"
 }

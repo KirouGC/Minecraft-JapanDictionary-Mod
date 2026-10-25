@@ -1,5 +1,7 @@
 package io.github.kirougc.japandict.mixin;
 
+import io.github.kirougc.japandict.JapanDictClient;
+import io.github.kirougc.japandict.dictionary.ScreenTextCollector;
 import io.github.kirougc.japandict.furigana.FuriganaRenderer;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -17,6 +19,9 @@ public abstract class DrawContextMixin {
 	@Inject(method = "drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/OrderedText;IIIZ)V", at = @At("HEAD"))
 	private void japandict$drawFurigana(TextRenderer textRenderer, OrderedText text, int x, int y, int color,
 										boolean shadow, CallbackInfo ci) {
+		if (JapanDictClient.isActive()) {
+			ScreenTextCollector.record(text);
+		}
 		FuriganaRenderer.render((DrawContext) (Object) this, textRenderer, text, x, y, color, shadow);
 	}
 }

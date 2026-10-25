@@ -3,7 +3,7 @@
 Mod de cliente para **Minecraft 1.21.10 (Fabric)** que ayuda a estudiar japonés. Solo se activa cuando el idioma del juego es japonés (`ja_jp`).
 
 - **Furigana** sobre todo el texto japonés de la interfaz.
-- **Modo Diccionario** (en desarrollo): una ventana compacta con estilo Minecraft con la lectura, el romaji, la traducción, los kanjis, una definición y ejemplos de cada palabra en pantalla.
+- **Modo Diccionario**: una ventana compacta con estilo Minecraft con la lectura, el romaji, la traducción, los kanjis, una definición y ejemplos de cada palabra en pantalla, en pestañas.
 
 ## Instalación
 
@@ -29,6 +29,13 @@ En Opciones → Controles → Japan Dictionary puedes asignar una tecla que camb
 Para corregir una lectura, crea `config/japandict-overrides.json`, por ejemplo `{"鍛冶": "かじ"}`.
 
 ## Diccionario
+
+Pulsa la tecla del Modo Diccionario (por defecto la de `}` en el teclado latinoamericano; se cambia en Controles → Japan Dictionary) jugando o con cualquier inventario abierto. La ventana muestra una pestaña por cada palabra que había en pantalla:
+
+- ←/→ o la rueda sobre las pestañas: cambiar de palabra
+- ↑/↓ o la rueda sobre el texto: desplazarse
+- Esc o la misma tecla: cerrar
+
 
 La primera vez que abres el juego, el mod descarga la base del diccionario (`config/japandict/japandict.db`) desde la release [`dictionary`](https://github.com/KirouGC/Minecraft-JapanDictionary-Mod/releases/tag/dictionary). También puedes copiarla a mano en esa carpeta.
 

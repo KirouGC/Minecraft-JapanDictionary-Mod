@@ -4,11 +4,17 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.github.kirougc.japandict.dictionary.DictionaryManager;
 import io.github.kirougc.japandict.furigana.ReadingEngine;
+import io.github.kirougc.japandict.gui.DictionaryOverlay;
+import io.github.kirougc.japandict.gui.DictionaryScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
@@ -49,13 +55,28 @@ public final class JapanDictClient implements ClientModInitializer {
 
 	private static final KeyBinding.Category CATEGORY = KeyBinding.Category.create(Identifier.of(MOD_ID, "main"));
 	private static KeyBinding cycleFurigana;
+	private static KeyBinding dictionaryKey;
+
+	public static KeyBinding dictionaryKey() {
+		return dictionaryKey;
+	}
 
 	@Override
 	public void onInitializeClient() {
 		config = JapanDictConfig.load();
 		cycleFurigana = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 				"key.japandict.cycle_furigana", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		// Por defecto la tecla a la derecha de la Ñ y la {, que en el teclado latinoamericano es "}".
+		dictionaryKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+				"key.japandict.dictionary", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_BACKSLASH, CATEGORY));
+		registerDictionaryHooks();
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			while (dictionaryKey.wasPressed()) {
+				if (isActive() && client.currentScreen == null) {
+					DictionaryOverlay.INSTANCE.open();
+					client.setScreen(new DictionaryScreen());
+				}
+			}
 			while (cycleFurigana.wasPressed()) {
 				config.position = config.position.next();
 				config.save();
@@ -74,6 +95,36 @@ public final class JapanDictClient implements ClientModInitializer {
 			} else {
 				LOGGER.info("Kuromoji listo en {} ms", (System.nanoTime() - start) / 1_000_000);
 			}
+		});
+	}
+
+	/** El diccionario también se abre encima de inventarios, cofres, aldeanos, etc., sin cerrarlos. */
+	private static void registerDictionaryHooks() {
+		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			if (screen instanceof DictionaryScreen) {
+				return;
+			}
+			DictionaryOverlay overlay = DictionaryOverlay.INSTANCE;
+			ScreenEvents.afterRender(screen).register((s, context, mouseX, mouseY, delta) ->
+					overlay.render(context, s.width, s.height));
+			ScreenEvents.remove(screen).register(s -> overlay.close());
+			ScreenKeyboardEvents.allowKeyPress(screen).register((s, input) -> {
+				if (s.getFocused() instanceof TextFieldWidget) {
+					return true; // escribiendo en el chat o en un buscador
+				}
+				if (isActive() && dictionaryKey.matchesKey(input)) {
+					overlay.toggle();
+					return false;
+				}
+				if (overlay.isVisible() && input.key() == GLFW.GLFW_KEY_ESCAPE) {
+					overlay.close();
+					return false;
+				}
+				return !overlay.keyPressed(input.key());
+			});
+			ScreenMouseEvents.allowMouseClick(screen).register((s, click) -> !overlay.mouseClicked(click.x(), click.y()));
+			ScreenMouseEvents.allowMouseScroll(screen).register((s, mouseX, mouseY, horizontal, vertical) ->
+					!overlay.mouseScrolled(mouseX, mouseY, vertical));
 		});
 	}
 
