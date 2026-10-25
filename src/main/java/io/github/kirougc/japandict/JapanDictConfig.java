@@ -16,7 +16,12 @@ public final class JapanDictConfig {
 
 	public enum Position {
 		ABOVE,
-		BELOW
+		BELOW,
+		HIDDEN;
+
+		public Position next() {
+			return values()[(ordinal() + 1) % values().length];
+		}
 	}
 
 	public boolean enabled = true;

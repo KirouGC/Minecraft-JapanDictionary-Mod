@@ -3,7 +3,8 @@
 	"package": "io.github.kirougc.japandict.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"DrawContextMixin"
+		"DrawContextMixin",
+		"OrderedTextTooltipComponentMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

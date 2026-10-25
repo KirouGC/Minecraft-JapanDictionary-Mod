@@ -4,8 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.github.kirougc.japandict.furigana.ReadingEngine;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +38,7 @@ public final class JapanDictClient implements ClientModInitializer {
 
 	/** El mod solo hace algo con el juego en japonés. */
 	public static boolean isActive() {
-		if (!config.enabled) {
+		if (!config.enabled || config.position == JapanDictConfig.Position.HIDDEN) {
 			return false;
 		}
 		MinecraftClient client = MinecraftClient.getInstance();
@@ -39,9 +46,24 @@ public final class JapanDictClient implements ClientModInitializer {
 				&& "ja_jp".equals(client.getLanguageManager().getLanguage());
 	}
 
+	private static final KeyBinding.Category CATEGORY = KeyBinding.Category.create(Identifier.of(MOD_ID, "main"));
+	private static KeyBinding cycleFurigana;
+
 	@Override
 	public void onInitializeClient() {
 		config = JapanDictConfig.load();
+		cycleFurigana = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+				"key.japandict.cycle_furigana", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			while (cycleFurigana.wasPressed()) {
+				config.position = config.position.next();
+				config.save();
+				if (client.player != null) {
+					client.player.sendMessage(Text.translatable("message.japandict.furigana."
+							+ config.position.name().toLowerCase(java.util.Locale.ROOT)), true);
+				}
+			}
+		});
 		READINGS.setOverrides(loadOverrides());
 		long start = System.nanoTime();
 		READINGS.initAsync().whenComplete((ignored, error) -> {
