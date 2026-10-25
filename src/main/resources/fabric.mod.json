@@ -1,0 +1,23 @@
+{
+	"schemaVersion": 1,
+	"id": "japandict",
+	"version": "${version}",
+	"name": "Japan Dictionary",
+	"description": "Furigana sobre todo el texto japonés y un diccionario dentro del juego. Solo se activa con el idioma en japonés (ja_jp).",
+	"authors": ["KirouGC"],
+	"contact": {
+		"sources": "https://github.com/KirouGC/Minecraft-JapanDictionary-Mod"
+	},
+	"license": "All-Rights-Reserved",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["io.github.kirougc.japandict.JapanDictClient"]
+	},
+	"mixins": ["japandict.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.17.0",
+		"minecraft": "1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
