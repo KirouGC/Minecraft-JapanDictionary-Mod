@@ -36,6 +36,13 @@ public final class JapanDictConfig {
 	/** Desplazamiento vertical extra en píxeles de interfaz (negativo = más arriba). */
 	public float verticalOffset = 0f;
 
+	/** De dónde se descarga la base del diccionario la primera vez. */
+	public String dictionaryUrl = DEFAULT_DICTIONARY_URL;
+	public boolean downloadDictionary = true;
+
+	public static final String DEFAULT_DICTIONARY_URL =
+			"https://github.com/KirouGC/Minecraft-JapanDictionary-Mod/releases/download/dictionary/japandict.db";
+
 	private static Path path() {
 		return FabricLoader.getInstance().getConfigDir().resolve("japandict.json");
 	}
@@ -55,6 +62,9 @@ public final class JapanDictConfig {
 		}
 		if (config.position == null) {
 			config.position = Position.ABOVE;
+		}
+		if (config.dictionaryUrl == null || config.dictionaryUrl.isBlank()) {
+			config.dictionaryUrl = DEFAULT_DICTIONARY_URL;
 		}
 		config.scale = Math.max(0.25f, Math.min(1f, config.scale));
 		config.save();

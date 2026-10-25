@@ -28,6 +28,12 @@ En Opciones → Controles → Japan Dictionary puedes asignar una tecla que camb
 
 Para corregir una lectura, crea `config/japandict-overrides.json`, por ejemplo `{"鍛冶": "かじ"}`.
 
+## Diccionario
+
+La primera vez que abres el juego, el mod descarga la base del diccionario (`config/japandict/japandict.db`) desde la release [`dictionary`](https://github.com/KirouGC/Minecraft-JapanDictionary-Mod/releases/tag/dictionary). También puedes copiarla a mano en esa carpeta.
+
+La base la genera `tools/build_dictionary.py` en GitHub Actions (workflow `dictionary`).
+
 ## Compilar
 
 ```
@@ -39,3 +45,6 @@ El jar queda en `build/libs/`. Cada push también lo compila en GitHub Actions.
 ## Créditos
 
 - [Kuromoji](https://github.com/atilika/kuromoji) (Apache 2.0) con el diccionario IPADIC, para las lecturas.
+- [JMdict y KANJIDIC2](https://www.edrdg.org/) de la Electronic Dictionary Research and Development Group (CC BY-SA 4.0).
+- [Tatoeba](https://tatoeba.org) (CC BY 2.0 FR), para las frases de ejemplo.
+- [Wiktionary japonés](https://ja.wiktionary.org) (CC BY-SA), extraído por [kaikki.org](https://kaikki.org/jawiktionary/), para las definiciones en japonés.

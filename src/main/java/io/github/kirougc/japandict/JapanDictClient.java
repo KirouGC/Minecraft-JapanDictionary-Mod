@@ -2,6 +2,7 @@ package io.github.kirougc.japandict;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import io.github.kirougc.japandict.dictionary.DictionaryManager;
 import io.github.kirougc.japandict.furigana.ReadingEngine;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -65,6 +66,7 @@ public final class JapanDictClient implements ClientModInitializer {
 			}
 		});
 		READINGS.setOverrides(loadOverrides());
+		DictionaryManager.start(config.dictionaryUrl, config.downloadDictionary);
 		long start = System.nanoTime();
 		READINGS.initAsync().whenComplete((ignored, error) -> {
 			if (error != null) {

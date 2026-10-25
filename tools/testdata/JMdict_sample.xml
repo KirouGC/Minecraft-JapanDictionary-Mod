@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE JMdict [
+<!ELEMENT JMdict (entry*)>
+<!ENTITY v1 "Ichidan verb">
+<!ENTITY vt "transitive verb">
+<!ENTITY n "noun (common) (futsuumeishi)">
+<!ENTITY uk "word usually written using kana alone">
+]>
+<!-- JMdict created: 2026-10-20 -->
+<JMdict>
+<entry>
+<ent_seq>1358280</ent_seq>
+<k_ele>
+<keb>食べる</keb>
+<ke_pri>ichi1</ke_pri>
+<ke_pri>news2</ke_pri>
+<ke_pri>nf25</ke_pri>
+</k_ele>
+<k_ele>
+<keb>喰べる</keb>
+</k_ele>
+<r_ele>
+<reb>たべる</reb>
+<re_pri>ichi1</re_pri>
+</r_ele>
+<sense>
+<pos>&v1;</pos>
+<pos>&vt;</pos>
+<gloss>to eat</gloss>
+</sense>
+<sense>
+<gloss>to live on (e.g. a salary)</gloss>
+<gloss>to live off</gloss>
+</sense>
+<sense>
+<gloss xml:lang="spa">comer</gloss>
+<gloss xml:lang="spa">alimentarse</gloss>
+</sense>
+</entry>
+<entry>
+<ent_seq>1265060</ent_seq>
+<k_ele>
+<keb>剣</keb>
+<ke_pri>ichi1</ke_pri>
+</k_ele>
+<r_ele>
+<reb>けん</reb>
+</r_ele>
+<sense>
+<pos>&n;</pos>
+<gloss>sword (esp. a double-edged one)</gloss>
+<gloss>blade</gloss>
+</sense>
+</entry>
+<entry>
+<ent_seq>1037990</ent_seq>
+<r_ele>
+<reb>ダイヤモンド</reb>
+<re_pri>gai1</re_pri>
+</r_ele>
+<sense>
+<pos>&n;</pos>
+<gloss>diamond</gloss>
+</sense>
+<sense>
+<gloss xml:lang="spa">diamante</gloss>
+</sense>
+</entry>
+<entry>
+<ent_seq>1234560</ent_seq>
+<k_ele>
+<keb>原木</keb>
+</k_ele>
+<r_ele>
+<reb>げんぼく</reb>
+</r_ele>
+<sense>
+<pos>&n;</pos>
+<gloss>logs &amp; raw timber</gloss>
+</sense>
+</entry>
+</JMdict>
