@@ -62,6 +62,7 @@ class DictionaryDatabaseTest {
 	@Test
 	void examplesPreferSpanish() throws Exception {
 		DictionaryModel.Word word = db.lookup("食べる").words().get(0);
+		// "食べる。" tiene español pero es solo la palabra: no sirve de ejemplo.
 		assertEquals("私はパンを食べる。", word.x.get(0).ja);
 		assertEquals("Yo como pan.", word.x.get(0).es);
 		assertEquals(2, word.x.size());
@@ -102,6 +103,12 @@ class DictionaryDatabaseTest {
 	@Test
 	void entitiesAreDecoded() throws Exception {
 		assertEquals("logs & raw timber", db.lookup("原木").words().get(0).s.get(0).en.get(0));
+	}
+
+	@Test
+	void spellingPointersAreResolved() throws Exception {
+		// 喰べる solo dice "食べる の漢字表記。": se reemplaza por las definiciones de 食べる.
+		assertEquals("食物を口に入れ、かんで飲み込む。", db.lookup("喰べる").definitions().get(0).d.get(0));
 	}
 
 	@Test

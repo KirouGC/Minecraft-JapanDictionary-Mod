@@ -38,6 +38,10 @@ BUCKETS = 8192
 BLOCK_SIZE = 64
 XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
 KEEP_ENTITIES = {"amp", "lt", "gt", "quot", "apos"}
+# Algunas glosas en español llevan la inglesa al lado: "diamante (eng: diamond)".
+ENG_NOTE = re.compile(r"\s*\(eng: [^)]*\)")
+# Definiciones del Wiktionary que solo remiten a otra entrada: "たべる の漢字表記。"
+SPELLING_POINTER = re.compile(r"^\s*(.+?)\s*の(?:漢字|かな|仮名)?表記。?\s*$")
 
 
 def fnv1a(key: str) -> int:
@@ -127,7 +131,8 @@ def parse_jmdict(path):
                     item["m"] = misc
                 senses_en.append(item)
             elif lang == "spa":
-                senses_es.append(texts)
+                texts = [ENG_NOTE.sub("", t).strip() for t in texts]
+                senses_es.append([t for t in texts if t])
 
         entry = {"r": readings, "s": senses_en}
         if kanji:
@@ -221,7 +226,7 @@ def attach_examples(entries, examples, per_word=2, max_len=10):
         for start in range(len(text)):
             for end in range(start + 1, min(len(text), start + max_len) + 1):
                 i = index.get(text[start:end])
-                if i is None or i in seen:
+                if i is None or i in seen or len(text) < (end - start) + 4:
                     continue
                 seen.add(i)
                 bucket = best[i]
@@ -253,6 +258,18 @@ def parse_wiktionary(path, per_word=3):
                 if item.get("pos_title") or item.get("pos"):
                     block["p"] = item.get("pos_title") or item.get("pos")
                 result[word].append(block)
+
+    for word, blocks in result.items():
+        for block in blocks:
+            resolved = []
+            for definition in block["d"]:
+                match = SPELLING_POINTER.match(definition)
+                target = result.get(match.group(1)) if match else None
+                if target and target is not blocks:
+                    resolved.extend(d for b in target for d in b["d"] if not SPELLING_POINTER.match(d))
+                else:
+                    resolved.append(definition)
+            block["d"] = list(dict.fromkeys(resolved))[:5] or block["d"]
     return result
 
 
