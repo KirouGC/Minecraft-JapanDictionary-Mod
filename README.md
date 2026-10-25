@@ -13,13 +13,17 @@ Mod de cliente para **Minecraft 1.21.10 (Fabric)** que ayuda a estudiar japonés
 
 ## Configuración
 
+En Opciones → Controles → Japan Dictionary puedes asignar una tecla que cambia el furigana entre arriba, abajo y oculto.
+
+
 `config/japandict.json`:
 
 | Opción | Valores | Por defecto |
 | --- | --- | --- |
 | `enabled` | `true` / `false` | `true` |
-| `position` | `ABOVE` (arriba) / `BELOW` (abajo) | `ABOVE` |
-| `scale` | 0.25 a 1.0 | 0.5 |
+| `position` | `ABOVE` (arriba) / `BELOW` (abajo) / `HIDDEN` (oculto) | `ABOVE` |
+| `autoScale` | `true`: tamaño nítido según la escala de interfaz | `true` |
+| `scale` | 0.25 a 1.0, solo si `autoScale` es `false` | 0.5 |
 | `verticalOffset` | píxeles de interfaz, negativo sube | 0 |
 
 Para corregir una lectura, crea `config/japandict-overrides.json`, por ejemplo `{"鍛冶": "かじ"}`.
