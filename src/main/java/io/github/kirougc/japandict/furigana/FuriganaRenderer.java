@@ -2,6 +2,7 @@ package io.github.kirougc.japandict.furigana;
 
 import io.github.kirougc.japandict.JapanDictClient;
 import io.github.kirougc.japandict.JapanDictConfig;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
@@ -50,10 +51,12 @@ public final class FuriganaRenderer {
 		}
 
 		JapanDictConfig config = JapanDictClient.config();
-		float scale = config.scale;
+		double guiScale = MinecraftClient.getInstance().getWindow().getScaleFactor();
+		float scale = config.autoScale ? autoScale(guiScale) : config.scale;
 		float rubyY = config.position == JapanDictConfig.Position.ABOVE
 				? y - textRenderer.fontHeight * scale + config.verticalOffset
 				: y + textRenderer.fontHeight - 1 + config.verticalOffset;
+		rubyY = snap(rubyY, guiScale);
 
 		Matrix3x2fStack matrices = context.getMatrices();
 		drawing = true;
@@ -66,7 +69,7 @@ public final class FuriganaRenderer {
 				float rubyWidth = textRenderer.getWidth(ruby) * scale;
 
 				matrices.pushMatrix();
-				matrices.translate(x + prefixWidth + (baseWidth - rubyWidth) / 2f, rubyY);
+				matrices.translate(snap(x + prefixWidth + (baseWidth - rubyWidth) / 2f, guiScale), rubyY);
 				matrices.scale(scale, scale);
 				context.drawText(textRenderer, ruby, 0, 0, color, shadow);
 				matrices.popMatrix();
@@ -74,6 +77,22 @@ public final class FuriganaRenderer {
 		} finally {
 			drawing = false;
 		}
+	}
+
+	/**
+	 * Escala con la que cada píxel de la fuente japonesa (16 px de alto dibujados en 8 unidades de
+	 * interfaz) ocupa un número entero de píxeles de pantalla, con un tamaño cercano al 60 %.
+	 * Con escalas fraccionarias los trazos de los kana se pierden y el texto queda ilegible.
+	 * Escala de interfaz 2 → 1.0, 3 → 0.67, 4 → 0.5, 6 → 0.67.
+	 */
+	static float autoScale(double guiScale) {
+		long screenPixelsPerFontPixel = Math.max(1, Math.round(guiScale * 0.5 * 0.6));
+		return (float) Math.min(1.0, 2.0 * screenPixelsPerFontPixel / guiScale);
+	}
+
+	/** Alinea una coordenada de interfaz a la cuadrícula de píxeles reales de la pantalla. */
+	private static float snap(float value, double guiScale) {
+		return (float) (Math.round(value * guiScale) / guiScale);
 	}
 
 	private static OrderedText slice(List<Integer> codePoints, List<Style> styles, int from, int to) {

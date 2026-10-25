@@ -21,7 +21,12 @@ public final class JapanDictConfig {
 
 	public boolean enabled = true;
 	public Position position = Position.ABOVE;
-	/** Tamaño del furigana respecto al texto normal. */
+	/**
+	 * Elige el tamaño del furigana según la escala de interfaz para que se vea nítido.
+	 * Si es false se usa {@link #scale}.
+	 */
+	public boolean autoScale = true;
+	/** Tamaño del furigana respecto al texto normal, solo con autoScale = false. */
 	public float scale = 0.5f;
 	/** Desplazamiento vertical extra en píxeles de interfaz (negativo = más arriba). */
 	public float verticalOffset = 0f;
