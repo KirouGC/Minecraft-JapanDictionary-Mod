@@ -39,6 +39,9 @@ public final class JapanDictConfig {
 	/** De dónde se descarga la base del diccionario la primera vez. */
 	public String dictionaryUrl = DEFAULT_DICTIONARY_URL;
 	public boolean downloadDictionary = true;
+	/** Posición de la ventana del diccionario (esquina superior izquierda); -1 = arriba a la derecha. */
+	public int dictionaryX = -1;
+	public int dictionaryY = -1;
 
 	public static final String DEFAULT_DICTIONARY_URL =
 			"https://github.com/KirouGC/Minecraft-JapanDictionary-Mod/releases/download/dictionary/japandict.db";

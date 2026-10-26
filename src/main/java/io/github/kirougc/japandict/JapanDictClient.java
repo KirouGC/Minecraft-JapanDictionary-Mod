@@ -122,7 +122,11 @@ public final class JapanDictClient implements ClientModInitializer {
 				}
 				return !overlay.keyPressed(input.key());
 			});
-			ScreenMouseEvents.allowMouseClick(screen).register((s, click) -> !overlay.mouseClicked(click.x(), click.y()));
+			ScreenMouseEvents.allowMouseClick(screen).register((s, click) ->
+					!overlay.mouseClicked(click.x(), click.y(), click.button()));
+			ScreenMouseEvents.allowMouseDrag(screen).register((s, click, horizontal, vertical) ->
+					!overlay.mouseDragged(click.x(), click.y()));
+			ScreenMouseEvents.allowMouseRelease(screen).register((s, click) -> !overlay.mouseReleased());
 			ScreenMouseEvents.allowMouseScroll(screen).register((s, mouseX, mouseY, horizontal, vertical) ->
 					!overlay.mouseScrolled(mouseX, mouseY, vertical));
 		});

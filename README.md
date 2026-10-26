@@ -25,6 +25,7 @@ En Opciones → Controles → Japan Dictionary puedes asignar una tecla que camb
 | `autoScale` | `true`: tamaño nítido según la escala de interfaz | `true` |
 | `scale` | 0.25 a 1.0, solo si `autoScale` es `false` | 0.5 |
 | `verticalOffset` | píxeles de interfaz, negativo sube | 0 |
+| `dictionaryX`, `dictionaryY` | posición de la ventana del diccionario; `-1` = arriba a la derecha | -1 |
 
 Para corregir una lectura, crea `config/japandict-overrides.json`, por ejemplo `{"鍛冶": "かじ"}`.
 
@@ -34,6 +35,7 @@ Pulsa la tecla del Modo Diccionario (por defecto la de `}` en el teclado latinoa
 
 - ←/→ o la rueda sobre las pestañas: cambiar de palabra
 - ↑/↓ o la rueda sobre el texto: desplazarse
+- Mantener el clic izquierdo sobre la ventana (fuera de las pestañas): moverla; no se sale de la pantalla y recuerda dónde la dejaste
 - Esc o la misma tecla: cerrar
 
 

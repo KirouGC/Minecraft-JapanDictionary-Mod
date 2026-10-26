@@ -1,6 +1,7 @@
 package io.github.kirougc.japandict.gui;
 
 import io.github.kirougc.japandict.JapanDictClient;
+import io.github.kirougc.japandict.JapanDictConfig;
 import io.github.kirougc.japandict.dictionary.DictionaryDatabase;
 import io.github.kirougc.japandict.dictionary.DictionaryManager;
 import io.github.kirougc.japandict.dictionary.DictionaryModel;
@@ -72,6 +73,10 @@ public final class DictionaryOverlay {
 	private int[] leftArrow, rightArrow;
 	private int lastVisibleTab;
 
+	// Arrastre de la ventana con el clic izquierdo.
+	private boolean dragging;
+	private double dragOffsetX, dragOffsetY;
+
 	private record Line(OrderedText text, int gapBefore) {
 	}
 
@@ -97,6 +102,7 @@ public final class DictionaryOverlay {
 
 	public void close() {
 		visible = false;
+		stopDragging();
 	}
 
 	public void toggle() {
@@ -132,8 +138,7 @@ public final class DictionaryOverlay {
 		TextRenderer tr = MinecraftClient.getInstance().textRenderer;
 		panelW = Math.min(MAX_WIDTH, screenWidth - 2 * MARGIN);
 		panelH = Math.min(MAX_HEIGHT, screenHeight - 2 * MARGIN);
-		panelX = screenWidth - panelW - MARGIN;
-		panelY = MARGIN;
+		placePanel(screenWidth, screenHeight);
 
 		ScreenTextCollector.setPaused(true);
 		context.createNewRootLayer();
@@ -155,6 +160,19 @@ public final class DictionaryOverlay {
 		} finally {
 			ScreenTextCollector.setPaused(false);
 		}
+	}
+
+	/** Coloca la ventana donde la dejó el jugador (o arriba a la derecha), siempre dentro de la pantalla. */
+	private void placePanel(int screenWidth, int screenHeight) {
+		JapanDictConfig config = JapanDictClient.config();
+		if (dragging && GLFW.glfwGetMouseButton(MinecraftClient.getInstance().getWindow().getHandle(),
+				GLFW.GLFW_MOUSE_BUTTON_LEFT) != GLFW.GLFW_PRESS) {
+			stopDragging(); // se soltó el botón fuera de la ventana del juego
+		}
+		int x = config.dictionaryX < 0 ? screenWidth - panelW - MARGIN : config.dictionaryX;
+		int y = config.dictionaryY < 0 ? MARGIN : config.dictionaryY;
+		panelX = Math.max(0, Math.min(x, screenWidth - panelW));
+		panelY = Math.max(0, Math.min(y, screenHeight - panelH));
 	}
 
 	private Text statusMessage(List<WordCollector.Entry> current) {
@@ -427,9 +445,12 @@ public final class DictionaryOverlay {
 	}
 
 	/** @return true si el clic fue dentro de la ventana (y no debe llegar a la pantalla de abajo). */
-	public boolean mouseClicked(double x, double y) {
+	public boolean mouseClicked(double x, double y, int button) {
 		if (!visible || !inside(x, y)) {
 			return false;
+		}
+		if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+			return true;
 		}
 		if (in(leftArrow, x, y)) {
 			firstTab = Math.max(0, firstTab - 1);
@@ -439,13 +460,51 @@ public final class DictionaryOverlay {
 				firstTab++;
 			}
 		} else {
+			boolean onTab = false;
 			for (int[] box : tabBoxes) {
 				if (in(box, x, y)) {
 					select(box[4]);
+					onTab = true;
 				}
+			}
+			if (!onTab) {
+				dragging = true;
+				dragOffsetX = x - panelX;
+				dragOffsetY = y - panelY;
 			}
 		}
 		return true;
+	}
+
+	/** Mueve la ventana mientras se arrastra; el límite de la pantalla se aplica al dibujarla. */
+	public boolean mouseDragged(double x, double y) {
+		if (!visible || !dragging) {
+			return false;
+		}
+		JapanDictConfig config = JapanDictClient.config();
+		config.dictionaryX = Math.max(0, (int) Math.round(x - dragOffsetX));
+		config.dictionaryY = Math.max(0, (int) Math.round(y - dragOffsetY));
+		return true;
+	}
+
+	/** @return true si se estaba arrastrando la ventana. */
+	public boolean mouseReleased() {
+		if (!dragging) {
+			return false;
+		}
+		stopDragging();
+		return true;
+	}
+
+	private void stopDragging() {
+		if (dragging) {
+			dragging = false;
+			JapanDictConfig config = JapanDictClient.config();
+			// Guardar la posición ya ajustada a la pantalla, no la que quedó fuera del borde.
+			config.dictionaryX = panelX;
+			config.dictionaryY = panelY;
+			config.save();
+		}
 	}
 
 	public boolean mouseScrolled(double x, double y, double amount) {

@@ -44,7 +44,17 @@ public final class DictionaryScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(Click click, boolean doubled) {
-		return DictionaryOverlay.INSTANCE.mouseClicked(click.x(), click.y()) || super.mouseClicked(click, doubled);
+		return DictionaryOverlay.INSTANCE.mouseClicked(click.x(), click.y(), click.button()) || super.mouseClicked(click, doubled);
+	}
+
+	@Override
+	public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+		return DictionaryOverlay.INSTANCE.mouseDragged(click.x(), click.y()) || super.mouseDragged(click, offsetX, offsetY);
+	}
+
+	@Override
+	public boolean mouseReleased(Click click) {
+		return DictionaryOverlay.INSTANCE.mouseReleased() || super.mouseReleased(click);
 	}
 
 	@Override
