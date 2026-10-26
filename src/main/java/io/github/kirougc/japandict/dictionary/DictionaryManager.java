@@ -28,6 +28,9 @@ public final class DictionaryManager {
 		FAILED
 	}
 
+	/** Revisión mínima de la base que espera esta versión del mod; 2 = definiciones traducidas. */
+	private static final int MIN_REVISION = 2;
+
 	private static volatile Status status = Status.NOT_STARTED;
 	private static volatile String error;
 	private static volatile long downloadedBytes;
@@ -77,6 +80,14 @@ public final class DictionaryManager {
 					throw new IOException("Falta " + path + " y la descarga automática está desactivada");
 				}
 				download(url, path);
+			} else if (allowDownload && revision(path) < MIN_REVISION) {
+				// Base vieja (por ejemplo sin las traducciones de las definiciones): se baja la nueva,
+				// y si no se puede se sigue usando la que hay.
+				try {
+					download(url, path);
+				} catch (Exception e) {
+					JapanDictClient.LOGGER.warn("No se pudo actualizar el diccionario, uso el que ya está", e);
+				}
 			}
 			status = Status.LOADING;
 			database = DictionaryDatabase.open(path);
@@ -86,6 +97,16 @@ public final class DictionaryManager {
 			error = e.getMessage();
 			status = Status.FAILED;
 			JapanDictClient.LOGGER.error("No se pudo preparar el diccionario", e);
+		}
+	}
+
+	/** Revisión del contenido de la base (sube cuando cambian los datos, no el formato). */
+	private static int revision(Path path) {
+		try (DictionaryDatabase db = DictionaryDatabase.open(path)) {
+			var value = db.header().get("revision");
+			return value == null ? 1 : value.getAsInt();
+		} catch (Exception e) {
+			return 0;
 		}
 	}
 

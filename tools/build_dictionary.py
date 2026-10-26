@@ -36,6 +36,8 @@ from collections import defaultdict
 
 MAGIC = b"JPDICT01"
 FORMAT_VERSION = 1
+# Sube cuando cambia el contenido; el mod vuelve a descargar una base con revisión menor.
+REVISION = 2
 BUCKETS = 8192
 BLOCK_SIZE = 64
 XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
@@ -319,6 +321,7 @@ def write_database(path, entries, kanji, definitions, sources):
 
     header = json.dumps({
         "version": FORMAT_VERSION,
+        "revision": REVISION,
         "buckets": BUCKETS,
         "blocks": len(blocks),
         "blockSize": BLOCK_SIZE,
