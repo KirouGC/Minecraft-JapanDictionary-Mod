@@ -61,7 +61,11 @@ def install(from_code, to_code):
         url = next(link for link in package["links"] if link.startswith("http"))
         archive = target + ".zip"
         os.makedirs(MODELS_DIR, exist_ok=True)
-        urllib.request.urlretrieve(url, archive)
+        # argos-net.com rechaza el User-Agent de urllib.
+        request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (japandict)"})
+        with urllib.request.urlopen(request) as response, open(archive, "wb") as out:
+            while chunk := response.read(1 << 20):
+                out.write(chunk)
         with zipfile.ZipFile(archive) as z:
             z.extractall(target)
         os.remove(archive)
