@@ -25,6 +25,8 @@ En Opciones → Controles → Japan Dictionary puedes asignar una tecla que camb
 | `autoScale` | `true`: tamaño nítido según la escala de interfaz | `true` |
 | `scale` | 0.25 a 1.0, solo si `autoScale` es `false` | 0.5 |
 | `verticalOffset` | píxeles de interfaz, negativo sube | 0 |
+| `deeplApiKey` | clave de la API de DeepL para traducir las definiciones japonesas | vacío |
+| `translationLanguage` | idioma de esas traducciones (`ES`, `EN-US`...) | `ES` |
 | `dictionaryX`, `dictionaryY` | posición de la ventana del diccionario; `-1` = arriba a la derecha | -1 |
 
 Para corregir una lectura, crea `config/japandict-overrides.json`, por ejemplo `{"鍛冶": "かじ"}`.
@@ -40,6 +42,8 @@ Pulsa la tecla del Modo Diccionario (por defecto la de `}` en el teclado latinoa
 
 
 La primera vez que abres el juego, el mod descarga la base del diccionario (`config/japandict/japandict.db`) desde la release [`dictionary`](https://github.com/KirouGC/Minecraft-JapanDictionary-Mod/releases/tag/dictionary). También puedes copiarla a mano en esa carpeta.
+
+Las definiciones del 国語辞典 están solo en japonés. Para ver su traducción debajo de cada una, crea una cuenta gratuita en [DeepL API](https://www.deepl.com/pro-api) (500.000 caracteres por mes) y pega la clave en `deeplApiKey`. Solo se traducen las palabras que abres, y cada traducción se guarda en `config/japandict/translations.json`.
 
 La base la genera `tools/build_dictionary.py` en GitHub Actions (workflow `dictionary`).
 

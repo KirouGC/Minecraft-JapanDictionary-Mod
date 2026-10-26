@@ -42,6 +42,10 @@ public final class JapanDictConfig {
 	/** Posición de la ventana del diccionario (esquina superior izquierda); -1 = arriba a la derecha. */
 	public int dictionaryX = -1;
 	public int dictionaryY = -1;
+	/** Clave de la API de DeepL (la gratuita termina en ":fx") para traducir las definiciones japonesas. */
+	public String deeplApiKey = "";
+	/** Idioma al que DeepL traduce las definiciones: ES, EN-US... */
+	public String translationLanguage = "ES";
 
 	public static final String DEFAULT_DICTIONARY_URL =
 			"https://github.com/KirouGC/Minecraft-JapanDictionary-Mod/releases/download/dictionary/japandict.db";
@@ -68,6 +72,12 @@ public final class JapanDictConfig {
 		}
 		if (config.dictionaryUrl == null || config.dictionaryUrl.isBlank()) {
 			config.dictionaryUrl = DEFAULT_DICTIONARY_URL;
+		}
+		if (config.deeplApiKey == null) {
+			config.deeplApiKey = "";
+		}
+		if (config.translationLanguage == null || config.translationLanguage.isBlank()) {
+			config.translationLanguage = "ES";
 		}
 		config.scale = Math.max(0.25f, Math.min(1f, config.scale));
 		config.save();

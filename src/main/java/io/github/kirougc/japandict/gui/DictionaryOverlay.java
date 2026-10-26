@@ -65,6 +65,7 @@ public final class DictionaryOverlay {
 	private List<Line> lines;
 	private int linesFor = -1;
 	private int linesWidth;
+	private int linesTranslations = -1;
 
 	// Geometría del último dibujo, para los clics.
 	private int panelX, panelY, panelW, panelH;
@@ -280,10 +281,12 @@ public final class DictionaryOverlay {
 	private void drawContent(DrawContext context, TextRenderer tr, WordCollector.Entry entry) {
 		int x = panelX + PADDING;
 		int width = panelW - 2 * PADDING - 4;
-		if (lines == null || linesFor != selected || linesWidth != width) {
+		int translations = JapanDictClient.translator().version();
+		if (lines == null || linesFor != selected || linesWidth != width || linesTranslations != translations) {
 			lines = buildLines(tr, entry, width);
 			linesFor = selected;
 			linesWidth = width;
+			linesTranslations = translations;
 		}
 
 		int total = 0;
@@ -403,14 +406,33 @@ public final class DictionaryOverlay {
 
 		if (!result.definitions().isEmpty()) {
 			add(out, tr, header("Definición (国語辞典)"), width, 5);
-			int n = 0;
+			List<String> shown = new ArrayList<>();
 			for (DictionaryModel.Definition definition : result.definitions()) {
 				for (String d : definition.d) {
-					if (n++ >= 4) {
-						break;
+					if (shown.size() < 4) {
+						shown.add(d);
 					}
-					add(out, tr, color("・" + d, TEXT), width, 0);
 				}
+			}
+			// Traducción con DeepL debajo de cada definición, igual que en los ejemplos.
+			var translator = JapanDictClient.translator();
+			var config = JapanDictClient.config();
+			boolean translating = !config.deeplApiKey.isBlank();
+			if (translating) {
+				translator.request(shown, config.deeplApiKey, config.translationLanguage);
+			}
+			for (int i = 0; i < shown.size(); i++) {
+				String d = shown.get(i);
+				add(out, tr, color("・" + d, TEXT_STRONG), width, i == 0 ? 0 : 2);
+				String translation = translator.cached(d);
+				if (translation != null) {
+					add(out, tr, color("→ " + translation, TEXT_SOFT), width, 0);
+				} else if (translating && translator.isPending(d)) {
+					add(out, tr, color("→ traduciendo…", TEXT_SOFT).formatted(Formatting.ITALIC), width, 0);
+				}
+			}
+			if (translating && translator.error() != null) {
+				add(out, tr, color("Sin traducción: " + translator.error(), TEXT_SOFT), width, 2);
 			}
 		}
 
@@ -425,7 +447,11 @@ public final class DictionaryOverlay {
 			}
 		}
 
-		add(out, tr, color("JMdict, KANJIDIC2 (EDRDG, CC BY-SA 4.0) · Tatoeba (CC BY 2.0 FR) · Wiktionary (CC BY-SA)", 0xFF8A8A8A),
+		String credits = "JMdict, KANJIDIC2 (EDRDG, CC BY-SA 4.0) · Tatoeba (CC BY 2.0 FR) · Wiktionary (CC BY-SA)";
+		if (!JapanDictClient.config().deeplApiKey.isBlank()) {
+			credits += " · Traducción de definiciones: DeepL";
+		}
+		add(out, tr, color(credits, 0xFF8A8A8A),
 				width, 8);
 		return out;
 	}

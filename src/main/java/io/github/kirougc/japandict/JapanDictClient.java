@@ -43,6 +43,17 @@ public final class JapanDictClient implements ClientModInitializer {
 		return config;
 	}
 
+	private static io.github.kirougc.japandict.dictionary.DefinitionTranslator translator;
+
+	/** Traductor de definiciones con DeepL; guarda lo traducido en config/japandict/translations.json. */
+	public static synchronized io.github.kirougc.japandict.dictionary.DefinitionTranslator translator() {
+		if (translator == null) {
+			translator = new io.github.kirougc.japandict.dictionary.DefinitionTranslator(
+					net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("japandict").resolve("translations.json"));
+		}
+		return translator;
+	}
+
 	/** El mod solo hace algo con el juego en japonés. */
 	public static boolean isActive() {
 		if (!config.enabled || config.position == JapanDictConfig.Position.HIDDEN) {
