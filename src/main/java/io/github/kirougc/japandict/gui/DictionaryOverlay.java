@@ -209,6 +209,12 @@ public final class DictionaryOverlay {
 
 	private void drawTabs(DrawContext context, TextRenderer tr, List<WordCollector.Entry> current) {
 		tabBoxes.clear();
+		// Las pestañas crecen para que el furigana de la palabra entre entero dentro de ellas.
+		int ruby = 0;
+		for (WordCollector.Entry entry : current) {
+			ruby = Math.max(ruby, FuriganaRenderer.extraLineHeight(tr, Text.literal(entry.key()).asOrderedText()));
+		}
+		int tabHeight = Math.max(TAB_HEIGHT, tr.fontHeight + 4 + (ruby > 0 ? ruby + 3 : 0));
 		int top = panelY + PADDING - 2;
 		int left = panelX + PADDING - 2;
 		int right = panelX + panelW - PADDING + 2;
@@ -216,8 +222,8 @@ public final class DictionaryOverlay {
 		boolean overflow = totalTabsWidth(tr, current) > right - left;
 		leftArrow = rightArrow = null;
 		if (overflow) {
-			leftArrow = new int[]{left, top, left + ARROW_WIDTH, top + TAB_HEIGHT};
-			rightArrow = new int[]{right - ARROW_WIDTH, top, right, top + TAB_HEIGHT};
+			leftArrow = new int[]{left, top, left + ARROW_WIDTH, top + tabHeight};
+			rightArrow = new int[]{right - ARROW_WIDTH, top, right, top + tabHeight};
 			drawArrow(context, tr, leftArrow, "<", firstTab > 0);
 			left += ARROW_WIDTH + 2;
 			right -= ARROW_WIDTH + 2;
@@ -228,32 +234,38 @@ public final class DictionaryOverlay {
 		lastVisibleTab = firstTab;
 		for (int i = firstTab; i < current.size(); i++) {
 			String label = current.get(i).key();
-			int w = Math.max(20, tr.getWidth(label) + 8);
+			int labelWidth = tabLabelWidth(tr, label);
+			int w = Math.max(20, labelWidth + 8);
 			if (x + w > right) {
 				break;
 			}
 			boolean on = i == selected;
-			context.fill(x, top, x + w, top + TAB_HEIGHT, OUTLINE);
-			context.fill(x + 1, top + 1, x + w - 1, top + TAB_HEIGHT, on ? PANEL : TAB_OFF);
+			context.fill(x, top, x + w, top + tabHeight, OUTLINE);
+			context.fill(x + 1, top + 1, x + w - 1, top + tabHeight, on ? PANEL : TAB_OFF);
 			context.fill(x + 1, top + 1, x + w - 1, top + 2, on ? LIGHT : PANEL);
-			context.drawText(tr, label, x + (w - tr.getWidth(label)) / 2, top + TAB_HEIGHT - tr.fontHeight - 2,
+			context.drawText(tr, label, x + (w - labelWidth) / 2, top + tabHeight - tr.fontHeight - 2,
 					on ? TEXT_STRONG : TEXT, false);
-			tabBoxes.add(new int[]{x, top, x + w, top + TAB_HEIGHT, i});
+			tabBoxes.add(new int[]{x, top, x + w, top + tabHeight, i});
 			lastVisibleTab = i;
 			x += w + 1;
 		}
 		if (overflow) {
 			drawArrow(context, tr, rightArrow, ">", lastVisibleTab < current.size() - 1);
 		}
-		context.fill(panelX + 3, top + TAB_HEIGHT, panelX + panelW - 3, top + TAB_HEIGHT + 1, SHADOW);
-		contentY = top + TAB_HEIGHT + 4;
+		context.fill(panelX + 3, top + tabHeight, panelX + panelW - 3, top + tabHeight + 1, SHADOW);
+		contentY = top + tabHeight + 4;
 		contentH = panelY + panelH - PADDING - contentY;
+	}
+
+	/** Ancho de la palabra o de su furigana, lo que sea más largo (けんさく es más ancho que 検索). */
+	private static int tabLabelWidth(TextRenderer tr, String label) {
+		return Math.max(tr.getWidth(label), FuriganaRenderer.rubyWidth(tr, Text.literal(label).asOrderedText()));
 	}
 
 	private static int totalTabsWidth(TextRenderer tr, List<WordCollector.Entry> current) {
 		int total = 0;
 		for (WordCollector.Entry entry : current) {
-			total += Math.max(20, tr.getWidth(entry.key()) + 8) + 1;
+			total += Math.max(20, tabLabelWidth(tr, entry.key()) + 8) + 1;
 		}
 		return total;
 	}
