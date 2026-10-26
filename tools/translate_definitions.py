@@ -16,6 +16,7 @@ import argparse
 import gzip
 import json
 import os
+import re
 import sys
 import time
 
@@ -113,22 +114,36 @@ def translate(args):
             print(f"{done}/{len(texts)} ({rate:.1f}/s)", file=sys.stderr, flush=True)
 
 
+# Japonés que el modelo dejó sin traducir ("e the appearance and実 the inside").
+LEFTOVER_JAPANESE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uff66-\uff9f]")
+LETTERS = re.compile(r"[A-Za-zÀ-ÿ]{2}")
+
+
+def usable(translation):
+    """Descarta traducciones rotas: con japonés sin traducir o sin ninguna palabra ("。" → ".")."""
+    return bool(translation) and not LEFTOVER_JAPANESE.search(translation) and bool(LETTERS.search(translation))
+
+
 def merge(args):
     merged = {}
+    dropped = 0
     for path in args.parts:
         with open(path, encoding="utf-8") as f:
             for line in f:
                 item = json.loads(line)
                 entry = {}
-                if item.get("es"):
-                    entry["es"] = item["es"]
-                if item.get("en"):
+                # El español sale del inglés: si el inglés está roto, el español también.
+                if usable(item.get("en")):
                     entry["en"] = item["en"]
+                    if usable(item.get("es")):
+                        entry["es"] = item["es"]
                 if entry:
                     merged[item["ja"]] = entry
+                else:
+                    dropped += 1
     with gzip.open(args.out, "wt", encoding="utf-8") as out:
         json.dump(merged, out, ensure_ascii=False, separators=(",", ":"))
-    print(f"{len(merged)} traducciones en {args.out}", file=sys.stderr)
+    print(f"{len(merged)} traducciones en {args.out}, {dropped} descartadas", file=sys.stderr)
 
 
 def main():
