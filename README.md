@@ -3,7 +3,7 @@
 Mod de cliente para **Minecraft 1.21.10 (Fabric)** que ayuda a estudiar japonés. Solo se activa cuando el idioma del juego es japonés (`ja_jp`).
 
 - **Furigana** sobre todo el texto japonés de la interfaz.
-- **Modo Diccionario** (en desarrollo): una ventana compacta con estilo Minecraft con la lectura, el romaji, la traducción, los kanjis, una definición y ejemplos de cada palabra en pantalla.
+- **Modo Diccionario**: una ventana compacta con estilo Minecraft con la lectura, el romaji, la traducción, los kanjis, una definición y ejemplos de cada palabra en pantalla, en pestañas.
 
 ## Instalación
 
@@ -25,8 +25,27 @@ En Opciones → Controles → Japan Dictionary puedes asignar una tecla que camb
 | `autoScale` | `true`: tamaño nítido según la escala de interfaz | `true` |
 | `scale` | 0.25 a 1.0, solo si `autoScale` es `false` | 0.5 |
 | `verticalOffset` | píxeles de interfaz, negativo sube | 0 |
+| `deeplApiKey` | clave de la API de DeepL para traducir las definiciones japonesas | vacío |
+| `translationLanguage` | idioma de esas traducciones (`ES`, `EN-US`...) | `ES` |
+| `dictionaryX`, `dictionaryY` | posición de la ventana del diccionario; `-1` = arriba a la derecha | -1 |
 
 Para corregir una lectura, crea `config/japandict-overrides.json`, por ejemplo `{"鍛冶": "かじ"}`.
+
+## Diccionario
+
+Pulsa la tecla del Modo Diccionario (por defecto la de `}` en el teclado latinoamericano; se cambia en Controles → Japan Dictionary) jugando o con cualquier inventario abierto. La ventana muestra una pestaña por cada palabra que había en pantalla:
+
+- ←/→ o la rueda sobre las pestañas: cambiar de palabra
+- ↑/↓ o la rueda sobre el texto: desplazarse
+- Mantener el clic izquierdo sobre la ventana (fuera de las pestañas): moverla; no se sale de la pantalla y recuerda dónde la dejaste
+- Esc o la misma tecla: cerrar
+
+
+La primera vez que abres el juego, el mod descarga la base del diccionario (`config/japandict/japandict.db`) desde la release [`dictionary`](https://github.com/KirouGC/Minecraft-JapanDictionary-Mod/releases/tag/dictionary). También puedes copiarla a mano en esa carpeta.
+
+Las definiciones del 国語辞典 están solo en japonés. Para ver su traducción debajo de cada una, crea una cuenta gratuita en [DeepL API](https://www.deepl.com/pro-api) (500.000 caracteres por mes) y pega la clave en `deeplApiKey`. Solo se traducen las palabras que abres, y cada traducción se guarda en `config/japandict/translations.json`.
+
+La base la genera `tools/build_dictionary.py` en GitHub Actions (workflow `dictionary`).
 
 ## Compilar
 
@@ -39,3 +58,6 @@ El jar queda en `build/libs/`. Cada push también lo compila en GitHub Actions.
 ## Créditos
 
 - [Kuromoji](https://github.com/atilika/kuromoji) (Apache 2.0) con el diccionario IPADIC, para las lecturas.
+- [JMdict y KANJIDIC2](https://www.edrdg.org/) de la Electronic Dictionary Research and Development Group (CC BY-SA 4.0).
+- [Tatoeba](https://tatoeba.org) (CC BY 2.0 FR), para las frases de ejemplo.
+- [Wiktionary japonés](https://ja.wiktionary.org) (CC BY-SA), extraído por [kaikki.org](https://kaikki.org/jawiktionary/), para las definiciones en japonés.

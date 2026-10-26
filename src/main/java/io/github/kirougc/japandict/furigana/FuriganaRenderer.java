@@ -18,8 +18,14 @@ import java.util.List;
 public final class FuriganaRenderer {
 	/** Evita procesar el propio furigana cuando lo dibujamos con drawText. */
 	private static boolean drawing;
+	/** Píxeles extra que se sube el furigana (solo arriba), para lugares concretos como el buscador creativo. */
+	private static int extraRaise;
 
 	private FuriganaRenderer() {
+	}
+
+	public static void setExtraRaise(int pixels) {
+		extraRaise = pixels;
 	}
 
 	/** Furigana de una línea ya colocado; los x son relativos al inicio del texto. */
@@ -96,7 +102,7 @@ public final class FuriganaRenderer {
 		double guiScale = guiScale();
 		float scale = layout.scale();
 		float rubyY = config.position == JapanDictConfig.Position.ABOVE
-				? y - textRenderer.fontHeight * scale + config.verticalOffset
+				? y - textRenderer.fontHeight * scale + config.verticalOffset - extraRaise
 				: y + textRenderer.fontHeight - 1 + config.verticalOffset;
 		rubyY = snap(rubyY, guiScale);
 

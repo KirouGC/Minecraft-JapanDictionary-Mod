@@ -1,0 +1,69 @@
+name: dictionary
+
+# Genera japandict.db con JMdict, KANJIDIC2, Tatoeba y el Wiktionary japonés, y la publica en la
+# release "dictionary" (con las traducciones automáticas de las definiciones si ya están), de donde la descarga el mod la primera vez que se abre el juego.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/build_dictionary.py
+      - .github/workflows/dictionary.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download sources
+        run: |
+          mkdir -p data && cd data
+          T=https://downloads.tatoeba.org/exports/per_language
+          curl -fsSL --retry 3 -o JMdict.gz http://ftp.edrdg.org/pub/Nihongo/JMdict.gz
+          curl -fsSL --retry 3 -o kanjidic2.xml.gz http://www.edrdg.org/kanjidic/kanjidic2.xml.gz
+          curl -fsSL --retry 3 -o jpn_sentences.tsv.bz2 $T/jpn/jpn_sentences.tsv.bz2
+          curl -fsSL --retry 3 -o spa_sentences.tsv.bz2 $T/spa/spa_sentences.tsv.bz2
+          curl -fsSL --retry 3 -o eng_sentences.tsv.bz2 $T/eng/eng_sentences.tsv.bz2
+          curl -fsSL --retry 3 -o jpn-spa_links.tsv.bz2 $T/jpn/jpn-spa_links.tsv.bz2
+          curl -fsSL --retry 3 -o jpn-eng_links.tsv.bz2 $T/jpn/jpn-eng_links.tsv.bz2
+          curl -fsSL --retry 3 -o wiktionary.jsonl.gz https://kaikki.org/jawiktionary/raw-wiktextract-data.jsonl.gz
+          ls -la
+      - name: Download definition translations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Las genera el workflow "translations"; si todavía no existen, la base sale sin ellas.
+          gh release download dictionary -p definitions_translations.json.gz -D data || true
+      - name: Build
+        run: |
+          python tools/build_dictionary.py \
+            --jmdict data/JMdict.gz \
+            --kanjidic data/kanjidic2.xml.gz \
+            --tatoeba-jpn data/jpn_sentences.tsv.bz2 \
+            --tatoeba-spa data/spa_sentences.tsv.bz2 \
+            --tatoeba-eng data/eng_sentences.tsv.bz2 \
+            --tatoeba-jpn-spa data/jpn-spa_links.tsv.bz2 \
+            --tatoeba-jpn-eng data/jpn-eng_links.tsv.bz2 \
+            --wiktionary data/wiktionary.jsonl.gz \
+            $( [ -f data/definitions_translations.json.gz ] && echo --translations data/definitions_translations.json.gz ) \
+            --out japandict.db
+          ls -la japandict.db
+      - name: Check
+        run: python tools/check_dictionary.py japandict.db
+      - uses: actions/upload-artifact@v4
+        with:
+          name: japandict-db
+          path: japandict.db
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view dictionary >/dev/null 2>&1 || gh release create dictionary \
+            --title "Base del diccionario" --target "$GITHUB_SHA" \
+            --notes "Base de datos que el mod descarga la primera vez. Datos: JMdict y KANJIDIC2 (EDRDG, CC BY-SA 4.0), Tatoeba (CC BY 2.0 FR), Wiktionary japonés (CC BY-SA, vía kaikki.org)."
+          gh release upload dictionary japandict.db --clobber

@@ -65,6 +65,42 @@ public final class ReadingEngine {
 		return spans;
 	}
 
+	/** Palabra con contenido (sustantivo, verbo, adjetivo...) encontrada en un texto. */
+	public record Word(String surface, String baseForm, String reading, String partOfSpeech) {
+		/** Forma con la que se busca en el diccionario: 食べた → 食べる. */
+		public String lookupForm() {
+			return baseForm == null || baseForm.equals("*") ? surface : baseForm;
+		}
+
+		public boolean isNoun() {
+			return partOfSpeech.equals("名詞");
+		}
+	}
+
+	private static final java.util.Set<String> CONTENT_POS = java.util.Set.of("名詞", "動詞", "形容詞", "副詞", "連体詞", "感動詞");
+	private static final java.util.Set<String> SKIPPED_SUBTYPES = java.util.Set.of("数", "非自立", "接尾", "特殊");
+
+	/** Palabras con contenido de un texto, en orden; las partículas, signos y números se descartan. */
+	public List<Word> words(String text) {
+		Tokenizer t = tokenizer;
+		if (t == null) {
+			return List.of();
+		}
+		List<Word> words = new ArrayList<>();
+		for (Token token : t.tokenize(text)) {
+			String pos = token.getPartOfSpeechLevel1();
+			if (!CONTENT_POS.contains(pos) || SKIPPED_SUBTYPES.contains(token.getPartOfSpeechLevel2())) {
+				continue;
+			}
+			String surface = token.getSurface();
+			if (!surface.codePoints().anyMatch(cp -> Kana.isKanji(cp) || Kana.isHiragana(cp) || Kana.isKatakana(cp))) {
+				continue;
+			}
+			words.add(new Word(surface, token.getBaseForm(), token.getReading(), pos));
+		}
+		return words;
+	}
+
 	private List<RubySpan> compute(Tokenizer t, String text) {
 		List<RubySpan> spans = new ArrayList<>();
 		for (Token token : t.tokenize(text)) {

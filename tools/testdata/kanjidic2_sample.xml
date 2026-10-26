@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE kanjidic2 [
+<!ELEMENT kanjidic2 (header,character*)>
+]>
+<kanjidic2>
+<header><file_version>4</file_version></header>
+<character>
+<literal>食</literal>
+<misc><grade>2</grade><stroke_count>9</stroke_count><freq>328</freq><jlpt>4</jlpt></misc>
+<reading_meaning>
+<rmgroup>
+<reading r_type="pinyin">shi2</reading>
+<reading r_type="ja_on">ショク</reading>
+<reading r_type="ja_on">ジキ</reading>
+<reading r_type="ja_kun">く.う</reading>
+<reading r_type="ja_kun">た.べる</reading>
+<meaning>eat</meaning>
+<meaning>food</meaning>
+<meaning m_lang="fr">manger</meaning>
+<meaning m_lang="es">comer</meaning>
+<meaning m_lang="es">comida</meaning>
+</rmgroup>
+<nanori>け</nanori>
+</reading_meaning>
+</character>
+<character>
+<literal>剣</literal>
+<misc><grade>8</grade><stroke_count>10</stroke_count><freq>1300</freq><jlpt>1</jlpt></misc>
+<reading_meaning>
+<rmgroup>
+<reading r_type="ja_on">ケン</reading>
+<reading r_type="ja_kun">つるぎ</reading>
+<meaning>sabre</meaning>
+<meaning>sword</meaning>
+<meaning m_lang="es">espada</meaning>
+</rmgroup>
+</reading_meaning>
+</character>
+</kanjidic2>
