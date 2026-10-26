@@ -65,6 +65,20 @@ public final class DictionaryModel {
 		/** Categoría gramatical, ej. 名詞. */
 		public String p;
 		public List<String> d = List.of();
+		/** Traducción automática de cada definición (null donde no hay); "en" solo si falta la española. */
+		public List<String> es = List.of();
+		public List<String> en = List.of();
+
+		/** Traducción guardada en la base de la definición i: español, o inglés marcado con "(en)". */
+		public String offlineTranslation(int i) {
+			if (es != null && i < es.size() && es.get(i) != null && !es.get(i).isBlank()) {
+				return es.get(i);
+			}
+			if (en != null && i < en.size() && en.get(i) != null && !en.get(i).isBlank()) {
+				return en.get(i) + " (en)";
+			}
+			return null;
+		}
 	}
 
 	/** Todo lo que la base sabe de una clave (palabra, lectura o kanji). */

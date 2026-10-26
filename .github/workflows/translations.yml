@@ -1,0 +1,92 @@
+name: translations
+
+# Traduce a máquina (Argos Translate, ja→en→es) las definiciones del Wiktionary japonés y publica
+# definitions_translations.json.gz en la release "dictionary"; después regenera la base.
+# Un push solo hace una prueba corta; la traducción completa se lanza a mano (workflow_dispatch).
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Definiciones por parte (0 = todas)"
+        default: "0"
+  push:
+    paths:
+      - tools/translate_definitions.py
+      - .github/workflows/translations.yml
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  LIMIT: ${{ github.event_name == 'push' && '50' || inputs.limit }}
+  PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.limit == '0' }}
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Extract definitions
+        run: |
+          curl -fsSL --retry 3 -o wiktionary.jsonl.gz https://kaikki.org/jawiktionary/raw-wiktextract-data.jsonl.gz
+          python tools/translate_definitions.py extract --wiktionary wiktionary.jsonl.gz --out definitions.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: definitions
+          path: definitions.jsonl
+
+  translate:
+    needs: extract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ctranslate2 sentencepiece
+      - uses: actions/download-artifact@v4
+        with:
+          name: definitions
+      - name: Translate
+        run: |
+          python tools/translate_definitions.py translate --definitions definitions.jsonl \
+            --shard ${{ matrix.shard }} --shards 12 --limit "$LIMIT" --out part-${{ matrix.shard }}.jsonl
+          head -n 5 part-${{ matrix.shard }}.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.shard }}
+          path: part-${{ matrix.shard }}.jsonl
+
+  merge:
+    needs: translate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: part-*
+          merge-multiple: true
+      - run: python tools/translate_definitions.py merge --out definitions_translations.json.gz part-*.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: definitions_translations
+          path: definitions_translations.json.gz
+      - name: Publish and rebuild the dictionary
+        if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload dictionary definitions_translations.json.gz --clobber
+          gh workflow run dictionary.yml --ref "$GITHUB_REF_NAME"

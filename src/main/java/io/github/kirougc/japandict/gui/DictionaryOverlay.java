@@ -407,14 +407,15 @@ public final class DictionaryOverlay {
 		if (!result.definitions().isEmpty()) {
 			add(out, tr, header("Definición (国語辞典)"), width, 5);
 			List<String> shown = new ArrayList<>();
+			List<String> offline = new ArrayList<>();
 			for (DictionaryModel.Definition definition : result.definitions()) {
-				for (String d : definition.d) {
-					if (shown.size() < 4) {
-						shown.add(d);
-					}
+				for (int i = 0; i < definition.d.size() && shown.size() < 4; i++) {
+					shown.add(definition.d.get(i));
+					offline.add(definition.offlineTranslation(i));
 				}
 			}
-			// Traducción con DeepL debajo de cada definición, igual que en los ejemplos.
+			// Traducción debajo de cada definición, igual que en los ejemplos: la de DeepL si hay
+			// clave, y si no (o mientras llega) la automática que trae la base.
 			var translator = JapanDictClient.translator();
 			var config = JapanDictClient.config();
 			boolean translating = !config.deeplApiKey.isBlank();
@@ -424,7 +425,10 @@ public final class DictionaryOverlay {
 			for (int i = 0; i < shown.size(); i++) {
 				String d = shown.get(i);
 				add(out, tr, color("・" + d, TEXT_STRONG), width, i == 0 ? 0 : 2);
-				String translation = translator.cached(d);
+				String translation = translating ? translator.cached(d) : null;
+				if (translation == null) {
+					translation = offline.get(i);
+				}
 				if (translation != null) {
 					add(out, tr, color("→ " + translation, TEXT_SOFT), width, 0);
 				} else if (translating && translator.isPending(d)) {
@@ -448,9 +452,9 @@ public final class DictionaryOverlay {
 		}
 
 		String credits = "JMdict, KANJIDIC2 (EDRDG, CC BY-SA 4.0) · Tatoeba (CC BY 2.0 FR) · Wiktionary (CC BY-SA)";
-		if (!JapanDictClient.config().deeplApiKey.isBlank()) {
-			credits += " · Traducción de definiciones: DeepL";
-		}
+		credits += JapanDictClient.config().deeplApiKey.isBlank()
+				? " · Definiciones traducidas a máquina (Argos Translate)"
+				: " · Definiciones traducidas con DeepL";
 		add(out, tr, color(credits, 0xFF8A8A8A),
 				width, 8);
 		return out;

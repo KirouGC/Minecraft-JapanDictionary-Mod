@@ -19,6 +19,14 @@ class DictionaryDatabaseTest {
 	@BeforeAll
 	static void build() throws Exception {
 		Path out = Files.createTempFile("japandict", ".db");
+		// Traducciones automáticas como las que genera tools/translate_definitions.py.
+		Path translations = Files.createTempFile("translations", ".json.gz");
+		try (var writer = new java.io.OutputStreamWriter(new java.util.zip.GZIPOutputStream(Files.newOutputStream(translations)),
+				java.nio.charset.StandardCharsets.UTF_8)) {
+			writer.write("{\"食物を口に入れ、かんで飲み込む。\":{\"es\":\"Poner comida en la boca, masticarla y tragarla.\","
+					+ "\"en\":\"To put food in the mouth, chew and swallow it.\"},"
+					+ "\"生活する。暮らしを立てる。\":{\"en\":\"To live. To make a living.\"}}");
+		}
 		String data = "tools/testdata/";
 		Process process = new ProcessBuilder("python3", "tools/build_dictionary.py",
 				"--jmdict", data + "JMdict_sample.xml",
@@ -29,6 +37,7 @@ class DictionaryDatabaseTest {
 				"--tatoeba-jpn-spa", data + "jpn-spa_links.tsv",
 				"--tatoeba-jpn-eng", data + "jpn-eng_links.tsv",
 				"--wiktionary", data + "wiktionary_sample.jsonl",
+				"--translations", translations.toString(),
 				"--out", out.toString())
 				.inheritIO().start();
 		assertEquals(0, process.waitFor(), "build_dictionary.py falló");
@@ -98,6 +107,14 @@ class DictionaryDatabaseTest {
 		DictionaryModel.Result result = db.lookup("食べる");
 		assertEquals("動詞", result.definitions().get(0).p);
 		assertEquals(2, result.definitions().get(0).d.size());
+	}
+
+	@Test
+	void definitionsCarryOfflineTranslations() throws Exception {
+		DictionaryModel.Definition definition = db.lookup("食べる").definitions().get(0);
+		assertEquals("Poner comida en la boca, masticarla y tragarla.", definition.offlineTranslation(0));
+		assertEquals("To live. To make a living. (en)", definition.offlineTranslation(1));
+		assertEquals(null, db.lookup("剣").definitions().get(0).offlineTranslation(0));
 	}
 
 	@Test

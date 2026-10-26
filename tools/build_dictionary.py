@@ -16,6 +16,8 @@ Formato del archivo (todo en big-endian, el lector está en DictionaryDatabase.j
   datos                                       cada bucket y cada bloque es JSON comprimido con gzip
 
 Cada bucket es un objeto {clave: {"w": [ids de palabras], "k": kanji, "ja": [definiciones]}}.
+Cada definición es {"p": categoría, "d": [textos], "es": [traducción], "en": [traducción]}; las
+traducciones automáticas son opcionales y van en paralelo a "d" (null donde no hay).
 Cada bloque es una lista de palabras: {"k": [kanji], "r": [lecturas], "c": común, "s": [acepciones
 en inglés], "es": [acepciones en español], "x": [ejemplos]}.
 """
@@ -273,6 +275,24 @@ def parse_wiktionary(path, per_word=3):
     return result
 
 
+def attach_translations(definitions, path):
+    """Agrega a cada bloque de definiciones su traducción automática (tools/translate_definitions.py):
+    "es" en paralelo a "d", y "en" solo donde no haya español."""
+    with gzip.open(path, "rt", encoding="utf-8") as f:
+        translations = json.load(f)
+    count = 0
+    for blocks in definitions.values():
+        for block in blocks:
+            found = [translations.get(d.strip(), {}) for d in block["d"]]
+            spanish = [t.get("es") for t in found]
+            if any(spanish):
+                block["es"] = spanish
+                count += sum(1 for t in spanish if t)
+            if any(not t.get("es") and t.get("en") for t in found):
+                block["en"] = [None if t.get("es") else t.get("en") for t in found]
+    return [None] * count
+
+
 def compress(obj):
     return gzip.compress(json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), 9)
 
@@ -332,6 +352,7 @@ def main():
     parser.add_argument("--tatoeba-jpn-spa", required=True)
     parser.add_argument("--tatoeba-jpn-eng", required=True)
     parser.add_argument("--wiktionary", required=True)
+    parser.add_argument("--translations", help="traducciones automáticas de las definiciones (.json.gz)")
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
 
@@ -347,12 +368,16 @@ def main():
                                                      args.tatoeba_jpn_spa, args.tatoeba_jpn_eng))
     step("Ejemplos asignados", lambda: attach_examples(entries, examples) or [e for e in entries if "x" in e[1]])
     definitions = step("Wiktionary", lambda: parse_wiktionary(args.wiktionary))
+    if args.translations:
+        step("Definiciones traducidas", lambda: attach_translations(definitions, args.translations))
     sources = {
         "JMdict": "EDRDG, CC BY-SA 4.0, https://www.edrdg.org/edrdg/licence.html",
         "KANJIDIC2": "EDRDG, CC BY-SA 4.0, https://www.edrdg.org/edrdg/licence.html",
         "Tatoeba": "CC BY 2.0 FR, https://tatoeba.org",
         "Wiktionary": "CC BY-SA, https://ja.wiktionary.org (vía kaikki.org)",
     }
+    if args.translations:
+        sources["Argos Translate"] = "traducción automática de las definiciones, MIT, https://www.argosopentech.com"
     write_database(args.out, entries, kanji, definitions, sources)
     print(f"Escrito {args.out}", file=sys.stderr)
 
